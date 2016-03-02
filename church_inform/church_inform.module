@@ -1,0 +1,387 @@
+<?php 
+
+function church_inform_init(){
+    drupal_add_css(drupal_get_path('module','church_inform').'/css/church_inform_style.css');
+    drupal_add_js(drupal_get_path('module','church_inform').'/js/church_inform_jfunctions.js');
+    
+}
+
+
+/** define Small Group node */
+function church_inform_node_info() {
+    return array(
+        'smallgroup' => array(
+            'name' => t('Small Group Form'),
+            'base' => 'node_content',
+            'has_title' => TRUE,
+            'title_label' => t('Title'),
+         )
+    );
+
+
+}
+
+/*
+function smallgroup_form($node, $form_state) {
+    return node_content_form($node, $form_state);
+}*/
+
+
+function church_inform_menu(){
+	$items = array();
+	$items['custom/church_inform/index'] = array(
+		'title'            => t('Custom module'),
+		'page callback'    => 'church_inform_index_action',
+		'access arguments' => array('access content'),
+		'type'             => MENU_LOCAL_TASK,
+	);
+
+	//create new tab for the forms 
+	
+
+    $items['node/%church_inform_menu/form'] = array(
+        'title' => 'Form',
+        'page callback' => 'drupal_get_form',
+
+        //form_example_1 is a function from form_example.inc file
+        'page arguments' => array('add_fields_form'), //pass form_id
+        //'access callback' => 'addtab_access_callback',
+        'access arguments' => array(1),
+        'weight' => 1,
+        'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+        //form_example.inc contains functions that builds and returns the $form array
+        'file' => 'includes/form_example.inc',
+        'type' => MENU_LOCAL_TASK,
+    );
+
+    $items['node/%church_inform_menu/submissions'] = array(
+        'title' => 'Submissions',
+        'page callback' => 'drupal_get_form',
+
+        //form_example_1 is a function from form_example.inc file
+        'page arguments' => array('form_example_1'), //pass form_id
+        //'access callback' => 'addtab_access_callback',
+        'access arguments' => array(1),
+        'weight' => 1,
+        'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+        //form_example.inc contains functions that builds and returns the $form array
+        'file' => 'includes/form_example.inc',
+        'type' => MENU_LOCAL_TASK,
+    );
+
+    $items['node/%church_inform_menu/form/conditionals'] = array(
+        'title' => 'Conditionals',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('form_example_1'), //pass form_id
+        //'access callback' => 'addtab_access_callback',
+        'access arguments' => array(1),
+        'weight' => 1,
+        //form_example.inc contains functions that builds and returns the $form array
+        'file' => 'includes/form_example.inc',
+        'type' => MENU_LOCAL_TASK,
+    );
+
+
+    $items['node/%church_inform_menu/form/settings'] = array(
+        'title' => 'Settings',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('form_example_1'), //pass form_id
+        //'access callback' => 'addtab_access_callback',
+        'access arguments' => array(1),
+        'weight' => 1,
+        //form_example.inc contains functions that builds and returns the $form array
+        'file' => 'includes/form_example.inc',
+        'type' => MENU_LOCAL_TASK,
+    );
+
+    $items['node/%church_inform_menu/form/components'] = array(
+        'title' => 'Form Components',
+        'page callback' => 'drupal_get_form',
+
+        //form_example_1 is a function from form_example.inc file
+        'page arguments' => array('add_fields_form'), //pass form_id
+        //'access callback' => 'addtab_access_callback',
+        'access arguments' => array(1),
+        'weight' => 0,
+        'file' => 'includes/form_example.inc',
+        'type' => MENU_DEFAULT_LOCAL_TASK,
+    );
+    
+ 
+
+	return $items;
+}
+
+function church_inform_admin_paths() {
+    $paths = array(
+        'node/*/form' => TRUE,
+        'node/*/form/*' => TRUE,
+    );
+
+    return $paths;
+}
+
+function church_inform_menu_load($nid){
+    $node = node_load($nid);
+
+    if (!is_numeric($nid)) { return FALSE; } 
+    // Load the full node so that we can determine that it's the right 
+    // content type. $node = node_load($nid); 
+    // If the node has failed to load, or isn't the right content type, do not show. 
+    
+    if (!isset($node->type) || $node->type != 'smallgroup') { 
+        return $node; 
+    } 
+    return $node;
+}
+
+function addtab_access_callback($node){
+    //print node_type_get_name($type)."this";
+    //if($node->type=='smallgroup'){
+    //    return true & user_access('access_content');
+    //}
+    return true & user_access('access_content');
+    
+}
+
+function form_example_1(){
+  $form = array();
+  // $form['#tree'] = TRUE;
+    
+  $form['name'] = array(
+        '#type'=>'textfield',
+        '#title'=> t('okay'),
+        '#description'=>t('Your first name goes here')
+        );
+    $form['last_name']=array(
+        '#type'=>'textfield',
+        '#title'=>t('Enter your last name'),
+        '#description'=>t('Your last name goes here')
+        );
+
+    $form['my_button'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save'),
+      //'#submit' => array('node_form_submit_build_node'),
+    );
+
+    //$form['#tree'] = TRUE;
+    
+    
+    return $form; 
+}
+
+function add_fields_form($form, &$form_state, $no_js_use=FALSE){
+    $form['#tree'] = TRUE;
+    $form['add'] = array(
+      '#type' => 'button',
+      '#name' => 'Textfield',
+      '#value' => t('Textfield'),
+      //'#submit' => 'addmoresubmit',
+      '#ajax' => array(
+        'callback' => 'ajax_simplest_callback',
+        'wrapper' => 'foo-replace',
+        'effect' => 'fade',
+      ),
+      '#attributes' => array(
+      'class' => array(
+         'add-field-class' 
+        ),
+      ),
+    );
+
+    $form['add_2'] = array(
+      '#type' => 'button',
+      '#name' => 'Fieldset',
+      '#value' => t('Fieldset'),
+      //'#submit' => 'addmoresubmit',
+      '#ajax' => array(
+        'callback' => 'ajax_simplest_callback',
+        'wrapper' => 'foo-replace',
+        'effect' => 'fade',
+      ),
+      '#attributes' => array(
+      'class' => array(
+         'add-field-class' 
+        ),
+      ),
+    );
+
+    $form['add_3'] = array(
+      '#type' => 'button',
+      '#name' => 'Textarea',
+      '#value' => t('Textarea'),
+      //'#submit' => 'addmoresubmit',
+      '#ajax' => array(
+        'callback' => 'ajax_simplest_callback',
+        'wrapper' => 'foo-replace',
+        'effect' => 'fade',
+      ),
+      '#attributes' => array(
+      'class' => array(
+         'add-field-class' 
+        ),
+      ),
+    );
+
+    $form['add_4'] = array(
+      '#type' => 'button',
+      '#name' => 'Textarea',
+      '#value' => t('Number'),
+      //'#submit' => 'addmoresubmit',
+      '#ajax' => array(
+        'callback' => 'ajax_simplest_callback',
+        'wrapper' => 'foo-replace',
+        'effect' => 'fade',
+      ),
+      '#attributes' => array(
+      'class' => array(
+         'add-field-class' 
+        ),
+      ),
+    );
+
+    $form['add_5'] = array(
+      '#type' => 'button',
+      '#name' => 'Textarea',
+      '#value' => t('Date'),
+      //'#submit' => 'addmoresubmit',
+      '#ajax' => array(
+        'callback' => 'ajax_simplest_callback',
+        'wrapper' => 'foo-replace',
+        'effect' => 'fade',
+      ),
+      '#attributes' => array(
+      'class' => array(
+         'add-field-class' 
+        ),
+      ),
+    );
+
+    $form['add_6'] = array(
+      '#type' => 'button',
+      '#name' => 'Textarea',
+      '#value' => t('Select options'),
+      //'#submit' => 'addmoresubmit',
+      '#ajax' => array(
+        'callback' => 'ajax_simplest_callback',
+        'wrapper' => 'foo-replace',
+        'effect' => 'fade',
+      ),
+      '#attributes' => array(
+      'class' => array(
+         'add-field-class' 
+        ),
+      ),
+    );
+
+    $form['add_7'] = array(
+      '#type' => 'button',
+      '#name' => 'Textarea',
+      '#value' => t('Member'),
+      //'#submit' => 'addmoresubmit',
+      '#ajax' => array(
+        'callback' => 'ajax_simplest_callback',
+        'wrapper' => 'foo-replace',
+        'effect' => 'fade',
+      ),
+      '#attributes' => array(
+      'class' => array(
+         'add-field-class' 
+        ),
+      ),
+    );
+
+    $form['add_8'] = array(
+      '#type' => 'button',
+      '#name' => 'Textarea',
+      '#value' => t('Discipleship Process'),
+      //'#submit' => 'addmoresubmit',
+      '#ajax' => array(
+        'callback' => 'ajax_simplest_callback',
+        'wrapper' => 'foo-replace',
+        'effect' => 'fade',
+      ),
+      '#attributes' => array(
+      'class' => array(
+         'add-field-class' 
+        ),
+      ),
+    );
+
+    /*$form['names'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Name 1'),
+        '#attributes' => array('id'=>'name_1', 'name'=>'name_1'),
+        );
+
+    $form['submit'] = array(
+          '#type' => 'submit',
+          '#value' => t('Submit'),
+        );
+        $form['#submit'][] = 'my_form_add_more_submit';
+    */
+    $form['#attributes'] = array('class' => 'add-field-wrapper');
+    
+    return $form;
+}
+
+function addmoresubmit(&$form, &$form_state){
+
+    $form_state['rebuild'] = TRUE;
+
+}
+
+function my_form_add_more_submit($form, &$form_state) {
+        print_r($form_state['values']);
+        exit();
+    }
+
+
+function ajax_callback($form, &$form_state){
+    $form_state['rebuild']=true;
+    return $form['names'];
+}
+
+function ajax_simplest_callback($form, &$form_state) {
+        if (empty($form_state['num_names'])) {
+            $form_state['num_names'] = 1;
+          }
+          else {
+            $form_state['num_names']++;
+            $form_state['rebuild'] = TRUE;
+          }
+
+      for ($i = 1; $i < $form_state['num_names']; $i++) {             
+        $form['names']['name_'.$i+1] = array(
+            '#type' => 'textfield', 
+            '#title' => t('Name '.$i+1),        
+            '#attributes'=>array('id'=>'name_'.$i+1, 'name'=>'name_'.$i+1), 
+        );      
+        $form['names']['select_'.$i+1] = array(
+            '#type' => 'select', 
+            '#title' => t('Select '.$i+1),      
+            '#attributes'=>array('id'=>'select_'.$i+1, 'name'=>'select_'.$i+1), 
+            '#options'=>array('1'=>'One', '2'=>'Two', '3'=>'Three'),
+        );
+      }
+
+    return $form['names'];
+}
+
+function add_fields(){     
+    return array('#markup' => '<p>' . t('Simple page:The quick brown fox jumps over the lazy dog.') . '</p>'); 
+}
+
+function church_inform_theme(){      
+    return array('church_inform_index' => array(
+    'template' => 'church_inform_index'         
+    )     
+    ); 
+} 
+
+function church_inform_index_action(){
+    return theme('church_inform_index', array()); 
+}
+
+

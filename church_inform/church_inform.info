@@ -1,0 +1,6 @@
+name = Church InForm
+description = Collect and manage small group information by creating customizable forms. 
+core = 7.x
+version = 7.x-1.0
+package = Other
+stylesheets[all][] = css/custom.css

@@ -1,0 +1,49 @@
+<?php
+
+
+function church_inform_install() {
+  // Ensure the smallgroup form node type is available.
+  node_types_rebuild();
+  $types = node_type_get_types();
+  node_add_body_field($types['smallgroup']);
+}
+
+function church_inform_uninstall(){
+    drupal_uninstall_schema('church_inform');
+  
+}
+  
+function church_inform_enable() {
+    if (db_table_exists('church_inform') == FALSE) {
+		drupal_install_schema('church_inform');
+    }
+
+
+}  
+
+function church_inform_disable() {
+    if (db_table_exists('church_inform') == TRUE) {
+		drupal_uninstall_schema('church_inform');
+		db_query('DROP TABLE {church_inform}');
+    }
+   
+}
+
+function church_inform_schema() {
+    $schema = array();
+    $schema['church_inform'] = array(
+        'description' => 'church_inform',
+        'fields' => array(
+            'id' => array(
+            'description' => 'id',
+            'type' => 'serial',
+            'unsigned' => true,
+            'not null' => true
+            ),
+        ),
+        'primary key' => array('id')
+    );
+  
+    
+    return $schema;
+}

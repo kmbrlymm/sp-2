@@ -4,3 +4,4 @@ core = 7.x
 version = 7.x-1.0
 package = Other
 stylesheets[all][] = css/custom.css
+scripts[] = js/effects.js

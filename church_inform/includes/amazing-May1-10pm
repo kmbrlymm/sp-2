@@ -1,0 +1,463 @@
+<?php
+
+/*****/
+
+
+
+//Ask for details that will build the form 
+/* ADD FIELDS */
+//this is the form to create forms 
+function add_fields_form($form, &$form_state, $no_js_use = FALSE){
+  $form['#tree'] = TRUE;
+
+  if(!empty($form_state['page_num']) && $form_state['page_num']==2){
+    return add_mem_fields_page_two($form, $form_state);
+  }
+
+  drupal_add_js('sites/all/modules/church_inform/js/church_inform_jfunctions.js');
+  
+  //MAIN DISCIPLESHIP PROCESS FIELDSET
+  $form['disc_fset'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Discipleship Process',
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+      '#prefix' => '<div id="main-disc-fieldset-wrapper">',
+      '#suffix' => '</div>',
+    );
+
+ 
+  $form['disc_fset']['show'] = array(
+      '#markup' => '<div class="show-hide-text"><a>Add Process</a></div>',
+  );
+
+  if (empty($form_state['disc_counter'])) {
+    $form_state['disc_counter'] = 1;
+  }
+
+
+  /******** START OF FOR LOOP FOR DISC FORM *******/
+  for($i=0; $i<$form_state['disc_counter']; $i++){
+    $form['disc_fset'][$i] = array(
+      '#type' => 'fieldset',
+      '#prefix' => '<div id="disc-fieldset-wrapper">',
+      '#suffix' => '</div>',
+     );
+
+
+
+    if($i>0){
+      //return if textfields contains values
+      // * create form validation for this
+      if($form_state['disc_fields'][1]['title']!= ' ' && $form_state['disc_fields'][1]['title']!=""){
+        $form['disc_fset'][$i]['f_label'] = array(
+        '#type' => 'select',
+        '#title' => $form_state['disc_fields'][$i]['title'],
+        '#options' => drupal_map_assoc($form_state['disc_fields'][$i]['options']),
+        );
+
+        $form['disc_fset'][$i]['remove'] = array(
+          '#type' => 'submit',
+          '#value' => t('Remove'.$i),
+          '#attributes' => array(
+            'index' => $i,
+           ),
+          '#submit' => array('remove_from_disc_process_form_alter'),  
+          );
+
+      }
+    }else{
+
+
+      $c = $form_state['disc_counter'];
+      $form['disc_fset'][0]['f_label'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Title'),
+        '#default_value' => ' ',
+      );
+
+      $form['disc_fset'][0]['chapter_count'] = array(
+          '#type' => 'select',
+          '#title' => t('Stages/Chapters/Sessions'),
+          '#options' => drupal_map_assoc(
+            array(
+              t(''), t('1'), t('2'), t('3'),
+              t('4'), t('5'), t('6'),
+              t('7'), t('8'), t('9'),
+              t('10'), t('11'), t('12'),
+              t('13'), t('14'),t('15'),
+            )
+          ),
+          '#ajax' => array(
+            'wrapper' => 'questions-fieldset-wrapper',
+            'callback' => 'ajax_add_chapters_callback',
+          ),
+      );
+
+      $form['disc_fset'][0]['disc_process'] = array(
+          '#type' => 'fieldset',
+          '#prefix' => '<div id="questions-fieldset-wrapper">',
+          '#suffix' => '</div>',
+        );
+
+      //display number of textfields as chapter_count
+      if(!empty($form_state['values']['disc_fset'][0]['chapter_count'])){
+        $count = $form_state['values']['disc_fset'][0]['chapter_count'];
+
+        //drupal_set_message($count);
+        for($x=0; $x<$count; $x++){
+          $form['disc_fset'][0]['disc_process'][$x]['title'] = array(
+              '#type' => 'textfield',
+              '#title' => $x+1,
+              '#default_value' => '',
+            );
+        }
+
+      }
+
+      
+      $form['disc_fset'][0]['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Add Disc'),
+        '#submit' => array('add_to_disc_process'),  
+      );
+    }//end of if-else
+    
+  }//end of for loop
+
+  $form['next'] = array(
+    '#type' => 'submit',
+    '#value' => t('Next'),
+    '#submit' => array('add_to_disc_submit'),  
+  );
+
+  /******** END OF FOR LOOP FOR DISC FORM *******/
+  // build the initial field if this is not being rebuilt 
+  // from ajax request  
+  
+  return $form;
+}
+
+
+
+function add_to_disc_submit($form, &$form_state){
+  $form_state['page_values'][1] = $form_state['values'];
+
+  if(!empty($form_state['page_values'][2])){
+    $form_state['values'] = $form_state['page_values'][2];
+  }
+
+  $form_state['page_num'] = 2;
+  $form_state['rebuild'] = TRUE;
+}
+
+
+
+//number of fields for each discipleship process
+function ajax_add_chapters_callback($form, &$form_state){
+  return $form['disc_fset'][0]['disc_process'];
+}
+
+
+function add_to_disc_process($form, &$form_state){
+
+  $c = $form_state['disc_counter'];
+  $form_state['disc_counter']++;
+  $form_state['rebuild'] = TRUE;
+  //$form_state['add_disc_bool'] = TRUE;
+  
+
+   //get values from input
+  if(!empty($form_state['values']['disc_fset'][0]['chapter_count'])){
+       $count = $form_state['values']['disc_fset'][0]['chapter_count'];
+       //store dropdown values in $chapt_array
+       if(!empty($form_state['values']['disc_fset'][0]['disc_process'])){         
+         $chapt_array = array($form_state['values']['disc_fset'][0]['disc_process'][0]['title']);
+          for($x=1; $x<$count; $x++){
+            $chapt_array[] = $form_state['values']['disc_fset'][0]['disc_process'][$x]['title'];
+          }           
+          $input_array = array(
+            'title' => $form_state['values']['disc_fset'][0]['f_label'],
+            'options' => $chapt_array,
+          );
+          $form_state['disc_fields'][$c] = $input_array;
+       }
+  }
+  
+  drupal_set_message("SO HERE");
+  return $form['disc_fset'];
+}
+
+
+
+
+// EXPERIMENTAL FUNCTION ** 
+function remove_from_disc_process_form_alter(&$form, &$form_state){
+  drupal_set_message("HMMMM");
+  $i = $form_state['clicked_button']['#attributes']['index'];
+  drupal_set_message("the i: ".$i);
+  $form_state['rebuild'] = TRUE;
+  
+  
+  $form['disc_fset']['#access'] = FALSE;
+  
+  //$form_state['disc_counter']--;
+  $form['disc_fset'][$i] = 0;
+  //$form['disc_fset'] 
+
+  
+  return $form['disc_fset'];
+}
+
+
+
+function add_mem_fields_page_two($form, &$form_state){
+  if (empty($form_state['memfield_counter'])) {
+    $form_state['memfield_counter'] = 1;
+  }
+
+   $form['member_fset'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Member Profile',
+      '#collapsible' => FALSE,
+      '#collapsed' => FALSE,
+      '#prefix' => '<div id="main-mem-fieldset-wrapper">',
+      '#suffix' => '</div>',
+    );
+
+  for($i=0; $i<$form_state['memfield_counter']; $i++){
+     $form['member_fset'][$i] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Member Profile',
+      '#collapsible' => true,
+      '#collapsed' => true,
+      '#prefix' => '<div id="mem-fieldset-wrapper">',
+      '#suffix' => '</div>',
+    );
+    
+    $form['member_fset'][$i]['f_type'] = array(
+        '#type' => 'select',
+        '#title' => t('Type'),
+        '#options' => drupal_map_assoc(
+          array(
+            t('Choose input type'),
+            t('Textfield'),
+            t('Textarea'),
+            t('Number'),
+            t('Date'),
+            t('Radio'),
+            t('Select options'),
+          )
+        ),
+        '#ajax' => array(
+          'wrapper' => 'mem-fields-wrapper-'.$i,
+          'callback' => 'ajax_add_memfield_callback',
+        ),
+    );
+
+
+     $form['member_fset'][$i]['type_fset'] = array(
+         '#type' => 'fieldset',
+         '#prefix' => '<div id="mem-fields-wrapper-'.$i.'">',
+         '#suffix' => '</div>',
+    );
+   
+
+  //($form_state['values']['member_fset']['f_type']);
+
+
+    if(!empty($form_state['values']['member_fset'][$i]['f_type'])){
+      drupal_set_message($i);
+      $type = $form_state['values']['member_fset'][$i]['f_type'];
+      
+      switch ($type) {
+        case t('Textfield'):
+          $form['member_fset'][$i]['type_fset']['attr1'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Label'),
+          );
+          $form['member_fset'][$i]['type_fset']['attr2'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Placeholder'),
+          );
+          $form['member_fset'][$i]['type_fset']['attr3'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Helper'),
+          );
+
+          $form['member_fset'][$i]['type_fset']['attr4'] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Required'),
+            '#default_value' => ' ',
+          );
+
+          $form['member_fset'][$i]['type_fset']['type'] = array(
+            '#type' => 'hidden',
+            '#value' => 'textfield',
+            );
+
+          $form['member_fset'][$i]['type_fset']['type'] = array(
+            '#type' => 'hidden',
+            '#value' => 'textfield',
+            );
+          break;
+
+        case t('Textarea'):
+          $form['member_fset'][$i]['type_fset']['attr'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Label'),
+          );
+          $form['member_fset'][$i]['type_fset']['attr4'] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Required'),
+            '#default_value' => ' ',
+          );
+          $form['member_fset'][$i]['type_fset']['type'] = array(
+            '#type' => 'hidden',
+            '#value' => 'textarea',
+          );
+          break;
+
+        case t('Number'):
+          $form['member_fset'][$i]['type_fset']['attr'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Label'),
+            '#default_value' => '',
+          );
+          $form['member_fset'][$i]['type_fset']['type'] = array(
+            '#type' => 'hidden',
+            '#value' => 'number',
+            );
+
+          break;
+        case t('Date'):
+          $form['member_fset'][$i]['type_fset']['attr'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Label'),
+            '#default_value' => '',
+          );
+          $form['member_fset'][$i]['type_fset']['type'] = array(
+            '#type' => 'hidden',
+            '#value' => 'date',
+          );
+          break;
+        case t('Radio'): 
+          $form['member_fset'][$i]['type_fset']['attr'] = array(
+            '#type' => 'select',
+            '#title' => t('Number of options'),
+            '#options' => drupal_map_assoc(
+              array(
+                t(''), t('1'), t('2'), t('3'),
+                t('4'),
+              )
+            ),
+          );
+          $form['member_fset'][$i]['type_fset']['attr1'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Options (separate with comma)'),
+          );
+
+          $form['member_fset'][$i]['type_fset']['type'] = array(
+            '#type' => 'hidden',
+            '#value' => 'radio',
+          );
+          break;
+        case t('Select options'):
+          $form['member_fset'][$i]['type_fset']['attr'] = array(
+            '#type' => 'select',
+            '#title' => t('Number of options'),
+            '#options' => drupal_map_assoc(
+              array(t(''), t('1'), t('2'), t('3'),
+                t('4'),t('5'),t('6'),t('7'),t('7'),t('8'),t('9'),t('10'),
+              )
+            ),
+          );
+          $form['member_fset'][$i]['type_fset']['attr1'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Options (separate with comma)'),
+          );
+          $form['member_fset'][$i]['type_fset']['type'] = array(
+            '#type' => 'hidden',
+            '#value' => 'select',
+          );
+          break;
+      }//end of switch case
+    }//end of if
+
+    $form['member_fset'][$i]['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Add'),
+      '#submit' => array('add_to_mem_fields'),  
+    );
+
+    $form['member_fset'][$i]['remove'] = array(
+      '#type' => 'submit',
+      '#value' => t('Remove'),
+      '#ajax' => array(
+          'wrapper' => 'mem-fields-wrapper-'.$i,
+          'method' => 'remove',
+          'callback' => 'remove_mem_field',
+      ),
+    );
+
+    $form['member_fset'][$i]['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Add'),
+      '#submit' => array('add_to_mem_fields'),  
+    );
+
+  }//end of for loop
+  
+
+  $form['pagetwoback'] = array(
+    '#type' => 'submit',
+    '#value' => t('Back'),
+    '#submit' => array('add_mem_fields_page_two_back'),
+  );
+  
+  $form['actions']['save_add_disc'] = array(
+  '#type' => 'submit',
+  '#value' => 'Save',
+  '#submit' => array('church_inform_node_submit'),
+  '#weight' => 1000,
+  );
+
+  return $form;
+}
+
+
+function add_mem_fields_page_two_back($form, &$form_state){
+  $form_state['page_values'][2] = $form_state['values'];
+  $form_state['values'] = $form_state['page_values'][1];
+  $form_state['page_num'] = 1;
+  $form_state['rebuild'] = TRUE;
+}
+
+
+function add_to_mem_fields($form, &$form_state){
+  $c = $form_state['memfield_counter'];
+  $form_state['memfield_counter']++;
+  $form_state['rebuild'] = TRUE;
+
+  for($i=0; $i<$c;$i++){
+     drupal_set_message($form_state['values']['member_fset'][$i]['f_type']);
+  }
+ 
+  drupal_set_message($form_state['memfield_counter']);
+}
+
+function ajax_add_memfield_callback($form, &$form_state){
+  //$form['rebuild'] = TRUE;
+  $c = $form_state['memfield_counter'];
+  if($c==1){
+    return $form['member_fset'][0]['type_fset'];
+  }else{
+    return $form['member_fset'][$c-1]['type_fset'];
+  }
+  
+}
+
+function remove_mem_field($form, &$form_state){
+  return $form['member_fset'];
+}
+

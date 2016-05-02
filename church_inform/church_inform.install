@@ -10,40 +10,182 @@ function church_inform_install() {
 
 function church_inform_uninstall(){
     drupal_uninstall_schema('church_inform');
-  
 }
   
 function church_inform_enable() {
-    if (db_table_exists('church_inform') == FALSE) {
-		drupal_install_schema('church_inform');
+    if(db_table_exists('cinform_form_items') == FALSE) {
+        drupal_install_schema('cinform_form_items'); 
     }
-
-
+    if(db_table_exists('cinform_smallgroup') == FALSE) {
+        drupal_install_schema('cinform_smallgroup'); 
+    }
+    if(db_table_exists('cinform_submissions') == FALSE) {
+        drupal_install_schema('cinform_submissions'); 
+    }
+    if(db_table_exists('cinform_disc_process') == FALSE) {
+        drupal_install_schema('cinform_disc_process'); 
+    }
+    if(db_table_exists('cinform_member') == FALSE) {
+        drupal_install_schema('cinform_member'); 
+    }
+    
 }  
 
 function church_inform_disable() {
-    if (db_table_exists('church_inform') == TRUE) {
-		drupal_uninstall_schema('church_inform');
-		db_query('DROP TABLE {church_inform}');
+    if (db_table_exists('church_inform_db') == TRUE) {
+		drupal_uninstall_schema('church_inform_db');
+		db_query('DROP TABLE {church_inform_db}');
+    }
+
+    if(db_table_exists('cinform_form_items') == TRUE) {
+       drupal_uninstall_schema('cinform_form_items');
+        db_query('DROP TABLE {cinform_form_items}');
+    }
+    if(db_table_exists('cinform_smallgroup') == TRUE) {
+       drupal_uninstall_schema('cinform_smallgroup');
+       db_query('DROP TABLE {cinform_smallgroup}');
+    }
+    if(db_table_exists('cinform_submissions') == TRUE) {
+       drupal_uninstall_schema('cinform_submissions');
+       db_query('DROP TABLE {cinform_submissions}');
+    }
+    if(db_table_exists('cinform_disc_process') == TRUE) {
+        drupal_uninstall_schema('cinform_disc_process');
+        db_query('DROP TABLE {cinform_disc_process}');
+    }
+    if(db_table_exists('cinform_member') == TRUE) {
+        drupal_uninstall_schema('cinform_member');
+        db_query('DROP TABLE {cinform_member}');
     }
    
 }
 
 function church_inform_schema() {
     $schema = array();
-    $schema['church_inform'] = array(
-        'description' => 'church_inform',
+
+    //store forms 
+    $schema['cinform_form_items'] = array(
+        'description' => 'Form Items',
         'fields' => array(
-            'id' => array(
-            'description' => 'id',
-            'type' => 'serial',
-            'unsigned' => true,
-            'not null' => true
+            'fid' => array(
+                'description' => 'form ID',
+                'type' => 'int',
+                'unsigned' => true,
+                'not null' => true,
+            ),
+            'ftype' => array(
+                'description' => 'Form Type',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+            ),
+            'flabel' => array(
+                'description' => 'Label',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
             ),
         ),
-        'primary key' => array('id')
+        'primary key' => array('fid'),
     );
-  
+
+    $schema['cinform_smallgroup'] = array(
+        'description' => 'Submissions',
+        'fields' => array(
+            'gid' => array(
+                'description' => 'smallgroup fieldset ID',
+                'type' => 'int',
+                'unsigned' => true,
+                'not null' => true,
+            ),
+            'leader' => array(
+                'description' => 'leader name',
+                'type' => 'varchar',
+                'length' => 255,
+                'unsigned' => true,
+                'not null' => true,
+            ),
+            'nid' => array(
+                'description' => 'node id',
+                'type' => 'int',
+                'unsigned' => true,
+            ),
+            'gtype' => array(
+                'description' => 'small group type',
+                'type' => 'varchar',
+                'length' => 255,
+                'unsigned' => true,
+                'not null' => true,
+            ),
+        ),
+        'primary key' => array('gid'),
+    );
+    
+    $schema['cinform_submissions'] = array(
+        'description' => 'Submissions',
+        'fields' => array(
+            'sid' => array(
+                'description' => 'submission ID',
+                'type' => 'serial',
+                'unsigned' => true,
+                'not null' => true,
+            ),
+            'nid' => array(
+                'type' => 'int',
+                'unsigned' => true,
+            ),
+        ),
+        'primary key' => array('sid'),
+    );
+    
+
+    $schema['cinform_disc_process'] = array(
+        'description' => 'discipleship process',
+        'fields' => array(
+            'dname' => array(
+                'description' => 'id of the process',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => true,
+            ),
+            'no_of_stages' => array(
+                'type' => 'int',
+                'unsigned' => true,
+                'not null' => true,
+            ),
+            'processes' => array(
+                'type' => 'varchar',
+                'length' => 300,
+            ),
+        ),
+        'primary key' => array('dname'),
+    );
+    
+
+    $schema['cinform_member'] = array(
+        'description' => 'member',
+        'fields' => array(
+            'mem_id' => array(
+                'type' => 'int',
+                'unsigned' => true,
+                'not null' => true,
+            ),
+        ),
+    );
+
+    $schema['church_inform_db'] = array(
+        'description' => 'church_inform database',
+        'fields' => array(
+            'id' => array(
+                'description' => 'id',
+                'type' => 'serial',
+                'unsigned' => true,
+                'not null' => true,
+            ),
+        ),
+        'primary key' => array('id'),
+    );
+
     
     return $schema;
 }

@@ -1,9 +1,10 @@
 input.add-field-class {
     width: 300px;
     margin-left: 80px;
+    float: right;
 }
 
-form.add-field-wrapper {
+#form-buttons {
     width: 400px;
     float: right;
 }
